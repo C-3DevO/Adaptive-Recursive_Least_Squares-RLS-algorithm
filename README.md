@@ -116,21 +116,105 @@ where:
 
 ---
 
-## RLS Characteristics
+# RLS Equalization
+
+The Recursive Least Squares (RLS) algorithm is an adaptive filtering technique that minimizes a weighted least-squares cost function using all past training samples.
+
+Unlike LMS, which uses a simple gradient approximation, RLS recursively updates the filter coefficients using second-order correlation information, leading to significantly faster convergence.
+
+---
+
+## RLS Cost Function
+
+RLS minimizes the exponentially weighted error cost:
+
+```math
+J[n] = \sum_{k=0}^{n} \lambda^{\,n-k} |e[k]|^2
+```
+
+where:
+
+- `e[k]` is the estimation error
+- `λ` is the forgetting factor with `0 < λ ≤ 1`
+
+The forgetting factor controls how strongly past samples influence the current estimate:
+
+- `λ = 1`  
+  → all past samples are weighted equally
+
+- `λ < 1`  
+  → older samples are gradually forgotten, improving tracking in time-varying channels
+
+---
+
+## RLS Gain Vector
+
+The RLS gain vector determines how strongly the filter coefficients are updated at each iteration.
+
+```math
+k[n] =
+\frac{P[n-1]u[n]}
+{\lambda + u^H[n]P[n-1]u[n]}
+```
+
+where:
+
+- `P[n]` is the inverse correlation matrix
+- `u[n]` is the received input vector
+- `u^H[n]` denotes the Hermitian transpose
+
+The gain vector adapts automatically based on the input signal statistics.
+
+---
+
+## RLS Weight Update
+
+The equalizer coefficients are recursively updated using the estimation error:
+
+```math
+w[n] = w[n-1] + k[n]e^*[n]
+```
+
+where:
+
+- `w[n]` is the adaptive equalizer coefficient vector
+- `e^*[n]` is the complex conjugate of the error signal
+
+---
+
+## Inverse Correlation Matrix Update
+
+The inverse correlation matrix is updated recursively as:
+
+```math
+P[n] =
+\frac{1}{\lambda}
+\left(
+P[n-1]
+-
+k[n]u^H[n]P[n-1]
+\right)
+```
+
+This recursive update avoids direct matrix inversion at every iteration, making RLS computationally efficient compared to solving the full least-squares problem repeatedly.
+
+---
+
+## Key Characteristics of RLS
 
 ### Advantages
 
 - Very fast convergence
-- Lower steady-state error
-- Uses second-order correlation information
-- Better performance in highly correlated environments
+- Lower steady-state estimation error
+- Excellent performance in highly correlated channels
+- Strong ISI mitigation capability
 
 ### Limitations
 
-- Higher computational complexity
-- Requires matrix inverse updates
-- More computationally expensive than LMS
-
+- Higher computational complexity than LMS
+- Requires matrix updates at every iteration
+- More memory intensive
+- Sensitive to forgetting-factor selection
 ---
 
 # MATLAB Features
